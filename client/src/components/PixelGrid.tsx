@@ -13,7 +13,7 @@ type PixelData = {
 const PixelGrid = () => {
   const [pixels, setPixels] = useState<{ [key: string]: PixelData }>({});
   const [selectedColor, setSelectedColor] = useState('#ff0000');
-  const { email, logout } = useAuth();
+  const { email, userId, logout } = useAuth();
 
   useEffect(() => {
     axios.get('/api/pixels')
@@ -24,6 +24,7 @@ const PixelGrid = () => {
   const handleClick = async (row: number, col: number) => {
     const pixelId = `${row}-${col}`;
     const token = localStorage.getItem('token');
+    if (!token) return alert('You must be logged in to change pixels.');
 
     try {
       await axios.post(`/api/pixels/${pixelId}/color`, {
@@ -39,6 +40,7 @@ const PixelGrid = () => {
         [pixelId]: {
           ...prev[pixelId],
           color: selectedColor,
+          ownerId: userId,
         }
       }));
     } catch (err) {
@@ -48,20 +50,31 @@ const PixelGrid = () => {
 
   const renderGrid = () => {
     const grid = [];
+
     for (let row = 0; row < GRID_SIZE; row++) {
       for (let col = 0; col < GRID_SIZE; col++) {
         const id = `${row}-${col}`;
-        const color = pixels[id]?.color || '#ffffff';
+        const pixel = pixels[id];
+        const color = pixel?.color || '#ffffff';
+
+        const title = pixel?.ownerId
+          ? pixel.ownerId === userId
+            ? 'Owned by you'
+            : 'Owned by someone else'
+          : 'Unclaimed';
+
         grid.push(
           <div
             key={id}
             className="pixel"
             style={{ backgroundColor: color }}
+            title={title}
             onClick={() => handleClick(row, col)}
           />
         );
       }
     }
+
     return grid;
   };
 
@@ -80,6 +93,7 @@ const PixelGrid = () => {
         value={selectedColor}
         onChange={(e) => setSelectedColor(e.target.value)}
       />
+
       <div className="grid">{renderGrid()}</div>
     </div>
   );

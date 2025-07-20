@@ -1,43 +1,57 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// Add userId to the context type
 interface AuthContextType {
   email: string | null;
-  login: (token: string, email: string) => void;
+  userId: string | null;
+  login: (token: string, email: string, userId: string) => void;
   logout: () => void;
 }
 
+// Set initial context
 const AuthContext = createContext<AuthContextType>({
   email: null,
+  userId: null,
   login: () => {},
-  logout: () => {}
+  logout: () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [email, setEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const userEmail = localStorage.getItem('email');
-    if (token && userEmail) setEmail(userEmail);
+    const storedEmail = localStorage.getItem('email');
+    const storedUserId = localStorage.getItem('userId');
+    if (token && storedEmail && storedUserId) {
+      setEmail(storedEmail);
+      setUserId(storedUserId);
+    }
   }, []);
 
-  const login = (token: string, userEmail: string) => {
+  const login = (token: string, email: string, userId: string) => {
     localStorage.setItem('token', token);
-    localStorage.setItem('email', userEmail);
-    setEmail(userEmail);
+    localStorage.setItem('email', email);
+    localStorage.setItem('userId', userId);
+    setEmail(email);
+    setUserId(userId);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('email');
+    localStorage.removeItem('userId');
     setEmail(null);
+    setUserId(null);
   };
 
   return (
-    <AuthContext.Provider value={{ email, login, logout }}>
+    <AuthContext.Provider value={{ email, userId, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => useContext(AuthContext);
+

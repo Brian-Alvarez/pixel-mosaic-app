@@ -18,21 +18,21 @@ const handleSubmit = async (e: React.FormEvent) => {
     const res = await axios.post(endpoint, { email, password });
 
     if (isLogin) {
-      login(res.data.token, email);
+      login(res.data.token, res.data.email, res.data.userId);
       setMessage('Logged in successfully!');
-      // ⏳ Clear message after 3 seconds
-      setTimeout(() => setMessage(''), 3000);
     } else {
       setMessage('Account created! You can now log in.');
       setIsLogin(true);
-      setTimeout(() => setMessage(''), 3000);
     }
+
+    setTimeout(() => setMessage(''), 3000);
   } catch (err: any) {
     console.error(err);
     setMessage(err.response?.data?.message || 'Something went wrong');
     setTimeout(() => setMessage(''), 3000);
   }
 };
+
 
 
   return (
