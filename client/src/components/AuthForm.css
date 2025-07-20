@@ -1,0 +1,12 @@
+/* styles.css or AuthForm.css */
+.auth-form {
+  margin: 1rem 0;
+}
+.auth-form input {
+  margin: 0.5rem;
+  padding: 0.5rem;
+}
+.auth-form button {
+  margin: 0.5rem;
+  padding: 0.5rem;
+}

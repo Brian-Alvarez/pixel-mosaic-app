@@ -1,0 +1,25 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String   @id @default(uuid())
+  email    String   @unique
+  password String
+  pixels   Pixel[]  @relation("UserPixels")
+}
+
+model Pixel {
+  id       String   @id              // e.g. "0-0", "3-9"
+  color    String
+  ownerId  String?                  
+  owner    User?     @relation("UserPixels", fields: [ownerId], references: [id])
+}
+

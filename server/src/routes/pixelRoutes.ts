@@ -1,6 +1,7 @@
 // src/routes/pixelRoutes.ts
-import { Router, Request, Response } from 'express';
-import { authenticateJWT } from '../middleware/authMiddleware';
+import { prisma } from "../db/prisma";
+import { Router, Request, Response } from "express";
+import { authenticateJWT } from "../middleware/authMiddleware";
 
 // Extend Express Request interface to include 'user'
 declare global {
@@ -15,48 +16,62 @@ declare global {
   }
 }
 
-// In-memory pixel store: 10x10 grid = 100 pixels (0 to 99)
-const pixelStore: {
-  [id: string]: { color: string; ownerId: string | null };
-} = {};
-
-for (let i = 0; i < 100; i++) {
-  pixelStore[i] = { color: '#ffffff', ownerId: null }; // default: white, no owner
-}
-
 const router = Router();
 
-router.post('/pixels/:id/color', authenticateJWT, (req: Request, res: Response) => {
+/*  POST /pixels/:id/color  */
+router.post("/pixels/:id/color", authenticateJWT, async (req, res) => {
   const { id } = req.params;
   const { color } = req.body;
   const userId = req.user?.id;
 
-  if (!color) return res.status(400).json({ message: 'Missing color' });
-  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-
-  const pixel = pixelStore[id];
-  if (!pixel) return res.status(404).json({ message: 'Pixel not found' });
-
-  // If pixel is unowned, assign to user
-  if (pixel.ownerId === null) {
-    pixel.ownerId = userId;
-    pixel.color = color;
-    return res.status(200).json({ message: `Pixel ${id} claimed and updated.` });
+  if (!/^\d{1,2}-\d{1,2}$/.test(id)) {
+    return res.status(400).json({ message: "Invalid pixel ID format." });
   }
 
-  // If user owns it, allow color change
-  if (pixel.ownerId === userId) {
-    pixel.color = color;
-    return res.status(200).json({ message: `Pixel ${id} color updated.` });
+  if (!color) return res.status(400).json({ message: "Missing color" });
+
+  const pixel = await prisma.pixel.findUnique({ where: { id } });
+
+  if (!pixel) {
+    // Unclaimed pixel – create & assign
+    await prisma.pixel.create({
+      data: { id, color, ownerId: userId },
+    });
+    return res.json({ message: `Pixel ${id} claimed and updated.` });
   }
 
-  // Otherwise, reject
-  return res.status(403).json({ message: 'You do not own this pixel.' });
+  if (pixel.ownerId !== userId)
+    return res.status(403).json({ message: "You do not own this pixel." });
+
+  await prisma.pixel.update({
+    where: { id },
+    data: { color },
+  });
+  res.json({ message: `Pixel ${id} color updated.` });
 });
 
-router.get('/pixels', (req: Request, res: Response) => {
-  res.status(200).json(pixelStore);
+router.get("/pixels", async (_req, res) => {
+  const pixels = await prisma.pixel.findMany();
+  res.json(
+    pixels.reduce((acc, p) => {
+      acc[p.id] = { color: p.color, ownerId: p.ownerId };
+      return acc;
+    }, {} as Record<string, { color: string; ownerId: string | null }>)
+  );
 });
 
+// Pixel grid initialization moved to a function for use elsewhere (not top-level)
+export async function initializePixelGrid() {
+  for (let r = 0; r < 10; r++) {
+    for (let c = 0; c < 10; c++) {
+      const id = `${r}-${c}`;
+      await prisma.pixel.upsert({
+        where: { id },
+        update: { color: "#ffffff" }, // no-op if it's already white
+        create: { id, color: "#ffffff", ownerId: null },
+      });
+    }
+  }
+}
 
 export default router;
