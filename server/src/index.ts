@@ -2,21 +2,26 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
-import pixelRoutes from './routes/pixelRoutes';
-import { initializePixelGrid } from './routes/pixelRoutes';
+import pixelRoutes, { initializePixelGrid } from './routes/pixelRoutes';
+import stripeRoutes from './routes/stripeRoutes';
+import { webhookRoutes } from './routes/webhook';
 import { prisma } from './db/prisma';
-
-
 
 dotenv.config();
 
-const app = express(); 
+const app = express();
 
+// ✅ Mount webhook route *before* JSON parsing
+app.use('/api/webhook', express.raw({ type: 'application/json' }), webhookRoutes);
+
+// Middleware (runs after webhook)
 app.use(cors());
 app.use(express.json());
 
+// Routes
 app.use('/api', authRoutes);
-app.use('/api', pixelRoutes); 
+app.use('/api', pixelRoutes);
+app.use('/api', stripeRoutes);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, async () => {

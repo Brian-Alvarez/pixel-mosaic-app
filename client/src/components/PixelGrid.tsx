@@ -16,16 +16,32 @@ const PixelGrid = () => {
   const { email, userId, logout } = useAuth();
 
   useEffect(() => {
-    axios.get('/api/pixels')
+    axios
+      .get('/api/pixels')
       .then(res => setPixels(res.data))
       .catch(err => console.error('Failed to fetch pixels:', err));
   }, []);
 
-  const handleClick = async (row: number, col: number) => {
-    const pixelId = `${row}-${col}`;
-    const token = localStorage.getItem('token');
-    if (!token) return alert('You must be logged in to change pixels.');
+const handleClick = async (row: number, col: number) => {
+  const pixelId = `${row}-${col}`;
+  const token = localStorage.getItem('token');
+  if (!token) return alert('You must be logged in to purchase a pixel.');
 
+  const pixel = pixels[pixelId];
+
+  if (!pixel?.ownerId) {
+    // Unclaimed pixel: start Stripe checkout
+    try {
+      const res = await axios.post('/api/checkout', { pixelId }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      window.location.href = res.data.url; // Redirect to Stripe
+    } catch (err) {
+      console.error('Checkout failed:', err);
+      alert('Failed to start checkout.');
+    }
+  } else if (pixel.ownerId === userId) {
+    // Already owned by user — allow color update
     try {
       await axios.post(`/api/pixels/${pixelId}/color`, {
         color: selectedColor,
@@ -40,13 +56,16 @@ const PixelGrid = () => {
         [pixelId]: {
           ...prev[pixelId],
           color: selectedColor,
-          ownerId: userId,
         }
       }));
     } catch (err) {
       console.error('Error updating pixel color:', err);
     }
-  };
+  } else {
+    alert('This pixel is owned by someone else.');
+  }
+};
+
 
   const renderGrid = () => {
     const grid = [];
@@ -84,7 +103,8 @@ const PixelGrid = () => {
 
       {email && (
         <div style={{ marginBottom: '1rem' }}>
-          Logged in as <strong>{email}</strong> | <button onClick={logout}>Logout</button>
+          Logged in as <strong>{email}</strong> |{' '}
+          <button onClick={logout}>Logout</button>
         </div>
       )}
 
