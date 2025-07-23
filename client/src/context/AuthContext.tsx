@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Add userId to the context type
+// Define what the AuthContext provides
 interface AuthContextType {
   email: string | null;
   userId: string | null;
@@ -8,7 +8,7 @@ interface AuthContextType {
   logout: () => void;
 }
 
-// Set initial context
+// Default values
 const AuthContext = createContext<AuthContextType>({
   email: null,
   userId: null,
@@ -22,11 +22,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const storedEmail = localStorage.getItem('email');
-    const storedUserId = localStorage.getItem('userId');
-    if (token && storedEmail && storedUserId) {
-      setEmail(storedEmail);
-      setUserId(storedUserId);
+
+    const validateToken = async () => {
+      try {
+        const res = await fetch('/api/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) throw new Error('Invalid token');
+
+        const data = await res.json();
+        setEmail(data.email);
+        setUserId(data.userId);
+      } catch (err) {
+        console.warn('Token invalid or expired. Logging out.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('email');
+        localStorage.removeItem('userId');
+        setEmail(null);
+        setUserId(null);
+      }
+    };
+
+    if (token) {
+      validateToken();
     }
   }, []);
 
@@ -54,4 +73,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => useContext(AuthContext);
-
