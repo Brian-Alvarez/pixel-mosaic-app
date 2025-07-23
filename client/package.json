@@ -26,7 +26,6 @@
     "eject": "react-scripts eject"
   },
   "proxy": "http://localhost:3001",
-  
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -46,6 +45,10 @@
     ]
   },
   "devDependencies": {
-    "@types/react-router-dom": "^5.3.3"
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/react-router-dom": "^5.3.3",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.1"
   }
 }
