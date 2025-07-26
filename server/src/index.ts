@@ -12,10 +12,8 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Mount webhook route *before* JSON parsing
 app.use('/api/webhook', express.raw({ type: 'application/json' }), webhookRoutes);
 
-// Middleware (runs after webhook)
 app.use(cors());
 app.use(express.json({ limit: "5mb" })); // Increased limit for larger payloads
 

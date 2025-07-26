@@ -10,30 +10,28 @@ const AuthForm: React.FC = () => {
 
   const { login } = useAuth();
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  const endpoint = isLogin ? '/api/login' : '/api/signup';
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const endpoint = isLogin ? '/api/login' : '/api/signup';
 
-  try {
-    const res = await axios.post(endpoint, { email, password });
+    try {
+      const res = await axios.post(endpoint, { email, password });
 
-    if (isLogin) {
-      login(res.data.token, res.data.email, res.data.userId);
-      setMessage('Logged in successfully!');
-    } else {
-      setMessage('Account created! You can now log in.');
-      setIsLogin(true);
+      if (isLogin) {
+        login(res.data.token, res.data.email, res.data.userId);
+        setMessage('Logged in successfully!');
+      } else {
+        setMessage('Account created! You can now log in.');
+        setIsLogin(true);
+      }
+
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err: any) {
+      console.error(err);
+      setMessage(err.response?.data?.message || 'Something went wrong');
+      setTimeout(() => setMessage(''), 3000);
     }
-
-    setTimeout(() => setMessage(''), 3000);
-  } catch (err: any) {
-    console.error(err);
-    setMessage(err.response?.data?.message || 'Something went wrong');
-    setTimeout(() => setMessage(''), 3000);
-  }
-};
-
-
+  };
 
   return (
     <div className="auth-form">
@@ -45,6 +43,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
+          className="text-black"
         />
         <input
           type="password"
@@ -52,6 +51,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           value={password}
           onChange={e => setPassword(e.target.value)}
           required
+          className="text-black"
         />
         <button type="submit">{isLogin ? 'Login' : 'Sign Up'}</button>
       </form>

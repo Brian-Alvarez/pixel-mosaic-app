@@ -14,6 +14,8 @@ model User {
   email    String   @unique
   password String
   pixels   Pixel[]  @relation("UserPixels")
+  resetToken        String?  // <- new
+  resetTokenExpires DateTime? // <- new
 }
 
 model Pixel {
@@ -22,4 +24,3 @@ model Pixel {
   ownerId  String?                  
   owner    User?     @relation("UserPixels", fields: [ownerId], references: [id])
 }
-
