@@ -5,11 +5,15 @@ import PixelGrid from './components/PixelGrid';
 import AuthForm from './components/AuthForm';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import { Toaster } from 'react-hot-toast';
+
 
 function App() {
   return (
     <Router>
       <div className="App">
+        <Toaster position="top-center" />
         <h1>Welcome to the Pixel Mosaic</h1>
         <Routes>
           <Route path="/" element={
@@ -25,6 +29,7 @@ function App() {
           } />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
         </Routes>
       </div>
     </Router>

@@ -16,6 +16,9 @@ model User {
   pixels   Pixel[]  @relation("UserPixels")
   resetToken        String?  // <- new
   resetTokenExpires DateTime? // <- new
+  verificationToken String? 
+  verificationTokenExpires DateTime?
+  isVerified Boolean @default(false)
 }
 
 model Pixel {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast'; 
 
 const GRID_SIZE = 100;
 
@@ -130,16 +131,45 @@ const placeDragon = async () => {
       <h2 className="text-lg font-bold mb-2">Pixel Grid</h2>
 
       {email && (
-        <div className="mb-4">
-          Logged in as <strong>{email}</strong>{' '}
-          <button
-            onClick={logout}
-            className="ml-2 px-2 py-1 text-sm bg-gray-300 hover:bg-gray-400 rounded"
-          >
-            Logout
-          </button>
-        </div>
-      )}
+  <div className="mb-4">
+    Logged in as <strong>{email}</strong>{' '}
+    <button
+      onClick={logout}
+      className="ml-2 px-2 py-1 text-sm bg-gray-300 hover:bg-gray-400 rounded"
+    >
+      Logout
+    </button>
+    <button
+  onClick={async () => {
+    const confirmed = window.confirm("Are you sure you want to delete your account?");
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error("You're not logged in.");
+      return;
+    }
+
+    try {
+      await axios.delete('/api/delete-account', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      toast.success("Account deleted.");
+      logout();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete account.");
+    }
+  }}
+  className="ml-2 px-2 py-1 text-sm bg-red-500 text-white hover:bg-red-600 rounded"
+>
+  Delete Account
+</button>
+  </div>
+)}
+
 
       <input
         type="color"
